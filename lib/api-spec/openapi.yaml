@@ -1,0 +1,248 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: seo
+    description: SEO analysis operations
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /seo/analyze:
+    post:
+      operationId: analyzeSeo
+      tags: [seo]
+      summary: Analyze SEO tags for a URL
+      description: Fetches the HTML for a given URL and returns parsed SEO meta tags with analysis and scores
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeSeoBody"
+      responses:
+        "200":
+          description: SEO analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeoAnalysisResult"
+        "400":
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "422":
+          description: Could not fetch or parse the URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    AnalyzeSeoBody:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The URL to analyze
+      required:
+        - url
+
+    SeoTagCheck:
+      type: object
+      properties:
+        tag:
+          type: string
+          description: The tag name or identifier
+        value:
+          type: ["string", "null"]
+          description: The current value of the tag, null if missing
+        status:
+          type: string
+          enum: [pass, warn, fail]
+          description: Whether the tag passes best practices
+        message:
+          type: string
+          description: Feedback message explaining the status
+        recommendation:
+          type: ["string", "null"]
+          description: Suggested improvement if applicable
+      required:
+        - tag
+        - value
+        - status
+        - message
+        - recommendation
+
+    SeoScore:
+      type: object
+      properties:
+        overall:
+          type: number
+          description: Overall SEO score 0-100
+        general:
+          type: number
+          description: Score for general/basic SEO tags 0-100
+        openGraph:
+          type: number
+          description: Score for Open Graph tags 0-100
+        twitter:
+          type: number
+          description: Score for Twitter Card tags 0-100
+      required:
+        - overall
+        - general
+        - openGraph
+        - twitter
+
+    GooglePreview:
+      type: object
+      properties:
+        title:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        url:
+          type: string
+        favicon:
+          type: ["string", "null"]
+      required:
+        - title
+        - description
+        - url
+        - favicon
+
+    OpenGraphPreview:
+      type: object
+      properties:
+        title:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        image:
+          type: ["string", "null"]
+        url:
+          type: ["string", "null"]
+        siteName:
+          type: ["string", "null"]
+        type:
+          type: ["string", "null"]
+      required:
+        - title
+        - description
+        - image
+        - url
+        - siteName
+        - type
+
+    TwitterPreview:
+      type: object
+      properties:
+        card:
+          type: ["string", "null"]
+        title:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        image:
+          type: ["string", "null"]
+        site:
+          type: ["string", "null"]
+        creator:
+          type: ["string", "null"]
+      required:
+        - card
+        - title
+        - description
+        - image
+        - site
+        - creator
+
+    SeoAnalysisResult:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The analyzed URL
+        fetchedAt:
+          type: string
+          description: ISO timestamp of when the URL was fetched
+        score:
+          $ref: "#/components/schemas/SeoScore"
+        googlePreview:
+          $ref: "#/components/schemas/GooglePreview"
+        openGraphPreview:
+          $ref: "#/components/schemas/OpenGraphPreview"
+        twitterPreview:
+          $ref: "#/components/schemas/TwitterPreview"
+        generalChecks:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeoTagCheck"
+        openGraphChecks:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeoTagCheck"
+        twitterChecks:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeoTagCheck"
+        technicalChecks:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeoTagCheck"
+        rawTags:
+          type: object
+          additionalProperties:
+            type: string
+          description: All raw meta tag name/content pairs found on the page
+      required:
+        - url
+        - fetchedAt
+        - score
+        - googlePreview
+        - openGraphPreview
+        - twitterPreview
+        - generalChecks
+        - openGraphChecks
+        - twitterChecks
+        - technicalChecks
+        - rawTags
