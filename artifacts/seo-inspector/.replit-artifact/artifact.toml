@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "SEO Inspector"
+version = "1.0.0"
+id = "artifacts/seo-inspector"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25867
+
+[services.development]
+run = "pnpm --filter @workspace/seo-inspector run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/seo-inspector", "run", "build" ]
+publicDir = "artifacts/seo-inspector/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25867"
+BASE_PATH = "/"
